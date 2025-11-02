@@ -9,9 +9,4 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-
-  // @Post()
-  // createUser(@Body() body: { name: string; age: number }) {
-  //   return this.appService.createUser(body);
-  // }
 }

@@ -4,36 +4,40 @@ import {
   ICreateUserResponse,
   IGetUserByIdResponse,
   IGetUsersResponse,
-  IUsers,
 } from './users.interface';
+import { Model } from 'mongoose';
+import { User } from './schemas/user.schema';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class UsersService {
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+  ) {}
   // users array
-  private users: IUsers[] = [];
   private id: number = 0;
 
   //get all users
-  getUsers(): IGetUsersResponse {
+  async getUsers(): Promise<IGetUsersResponse> {
+    const users = await this.userModel.find();
     return {
       message: 'Users fetched successfully',
-      data: this.users,
+      data: users,
     };
   }
 
   //create new user
-  createUser(body: ICreateUser): ICreateUserResponse {
-    this.id++;
-    this.users?.push({ ...body, id: this.id });
-    return {
-      message: 'User created successfully',
-      data: { ...body, id: this.id },
-    };
-  }
+  // async createUser(body: ICreateUser): Promise<ICreateUserResponse> {
+  //   const user = await this.userModel.create(body);
+  //   return {
+  //     message: 'User created successfully',
+  //     data: user,
+  //   };
+  // }
 
-  //get user by id
-  getUserById(id: number): IGetUserByIdResponse {
-    const user = this.users.find((u) => u.id == id);
+  // get user by id
+  async getUserById(id: string): Promise<IGetUserByIdResponse> {
+    const user = await this.userModel.findById(id);
     if (!user) {
       throw new HttpException('User Id not found', HttpStatus.NOT_FOUND);
     }
@@ -44,21 +48,24 @@ export class UsersService {
   }
 
   //delete new user
-  deleteUser(id: number): void {
-    const user = this.users.find((u) => u.id == id);
+  async deleteUser(id: string): Promise<void> {
+    const user = await this.userModel.findByIdAndDelete(id);
     if (!user) {
       throw new HttpException('User Id not found', HttpStatus.NOT_FOUND);
     }
-    this.users.splice(id - 1, 1);
   }
 
-  //update user
-  updateUser(id: number, body: ICreateUser): ICreateUserResponse {
-    const user = this.users.find((u) => u.id == id);
+  // update user
+  async updateUser(
+    id: string,
+    body: ICreateUser,
+  ): Promise<ICreateUserResponse> {
+    const user = await this.userModel.findByIdAndUpdate(id, body, {
+      new: true,
+    });
     if (!user) {
       throw new HttpException('User Id not found', HttpStatus.NOT_FOUND);
     }
-    this.users[id - 1] = { ...body, id: id };
-    return { message: 'User updated successfully', data: this.users[id - 1] };
+    return { message: 'User updated successfully', data: user };
   }
 }

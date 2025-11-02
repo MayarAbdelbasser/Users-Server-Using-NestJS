@@ -6,8 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  Post,
-  Put,
+  Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import type {
@@ -16,36 +16,40 @@ import type {
   IGetUsersResponse,
 } from './users.interface';
 import { CreateUserDto } from './create-user.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
   @Get('/')
-  getUsers(): IGetUsersResponse {
+  getUsers(): Promise<IGetUsersResponse> {
     return this.userService.getUsers();
   }
 
-  @Post()
-  createUser(@Body() CreateUserDto: CreateUserDto): ICreateUserResponse {
-    return this.userService.createUser(CreateUserDto);
-  }
+  // @Post()
+  // createUser(
+  //   @Body() CreateUserDto: CreateUserDto,
+  // ): Promise<ICreateUserResponse> {
+  //   return this.userService.createUser(CreateUserDto);
+  // }
 
+  @UseGuards(AuthGuard)
   @Get('/:id')
-  getUserById(@Param('id') id: string): IGetUserByIdResponse {
-    return this.userService.getUserById(+id);
+  getUserById(@Param('id') id: string): Promise<IGetUserByIdResponse> {
+    return this.userService.getUserById(id);
   }
 
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteUser(@Param('id') id: string): void {
-    this.userService.deleteUser(+id);
+  deleteUser(@Param('id') id: string): Promise<void> {
+    return this.userService.deleteUser(id);
   }
 
-  @Put('/:id')
+  @Patch('/:id')
   updateUser(
     @Param('id') id: string,
     @Body() CreateUserDto: CreateUserDto,
-  ): ICreateUserResponse {
-    return this.userService.updateUser(+id, CreateUserDto);
+  ): Promise<ICreateUserResponse> {
+    return this.userService.updateUser(id, CreateUserDto);
   }
 }
